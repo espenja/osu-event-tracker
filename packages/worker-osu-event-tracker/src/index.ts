@@ -1,11 +1,18 @@
 import { getNextFeedEvent } from "lib-osu-event-tracker/src/getNextFeedElement"
 import { getContainer } from "worker-osu-event-tracker/src/database/Repository"
 import { SBClientSender } from "worker-osu-event-tracker/src/servicebus/serviceBusClient"
+import { createLogger } from "utilities/src/simpleLogger"
 
 import { getConfig } from "./getConfig"
-import { now } from "./global"
+import { FeedEvent } from "../../lib-osu-event-tracker/src/types/FeedEvents"
 
 require("dotenv").config()
+
+const { log, error } = createLogger("osu-event-receiver", {
+	doLog: true,
+	useColors: true,
+	useTimestamps: true
+})
 
 function sleep(ms: number) {
 	return new Promise((resolve) => {
@@ -28,7 +35,8 @@ const start = async () => {
 			const { responseBody, event } = await getNextFeedEvent(currentIndex)
 
 			if (config.dev) {
-				console.log(`${now()}: ${responseBody.replace(/\n/g, ", ")}`)
+				log(`${responseBody.replace(/\n/g, ", ")}`)
+				log("", event)
 			}
 
 			if (event) {
@@ -40,15 +48,19 @@ const start = async () => {
 				await sleep(500)
 			}
 
-			// Put it in Cosmos
-			container.items.create({
+			const richEvent: Required<FeedEvent> = {
 				...event,
-				raw: responseBody,
-				pk: event.type
-			})
+				raw: responseBody
+			}
 
 			// Ship event with ServiceBus
-			sbSender.send(event, event.type)
+			sbSender.send(richEvent, richEvent.type)
+
+			// Put it in Cosmos
+			container.items.create({
+				...richEvent,
+				pk: event.type
+			})
 		} catch (error) {
 			console.error(error)
 			container.items.create({
@@ -59,6 +71,6 @@ const start = async () => {
 	}
 }
 
-start().catch((error) => {
-	console.error(error)
+start().catch((err) => {
+	error(err)
 })
