@@ -1,4 +1,11 @@
-import { ProcessErrorArgs, ServiceBusClient, ServiceBusReceivedMessage, ServiceBusReceiver } from "@azure/service-bus"
+import {
+	ProcessErrorArgs,
+	ServiceBusClient,
+	ServiceBusReceivedMessage,
+	ServiceBusReceiver,
+	ServiceBusSender
+} from "@azure/service-bus"
+import { FeedType } from "lib-osu-event-tracker/src/types/FeedEvents"
 
 type SBClientReceiverOptions = {
 	connectionString: string
@@ -10,6 +17,7 @@ type SBClientReceiverOptions = {
 
 type SBClientSenderOptions = {
 	connectionString: string
+	topics: FeedType[]
 }
 
 export class SBClientReceiver {
@@ -31,15 +39,24 @@ export class SBClientReceiver {
 	}
 }
 
+type RecordOfTopicsSender = {
+	[key in FeedType]: ServiceBusSender
+}
+
 export class SBClientSender {
 	private client: ServiceBusClient
+	private topics: RecordOfTopicsSender
 
 	public constructor(options: SBClientSenderOptions) {
 		this.client = new ServiceBusClient(options.connectionString)
+		this.topics = options.topics.reduce<RecordOfTopicsSender>((topics, topic) => {
+			topics[topic] = this.client.createSender(topic)
+			return topics
+		}, {} as any)
 	}
 
-	public async send(message: any, topic: string) {
-		await this.client.createSender(topic).sendMessages({
+	public async send(message: any, topic: FeedType) {
+		await this.topics[topic].sendMessages({
 			body: message
 		})
 	}
