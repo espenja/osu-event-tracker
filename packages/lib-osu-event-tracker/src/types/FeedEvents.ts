@@ -20,6 +20,7 @@ export type FeedEvent = {
 	type: FeedType
 	feedIndex: number
 	raw?: string
+	timestamp?: number
 }
 
 export type Map = {

@@ -68,7 +68,8 @@ const start = async () => {
 
 			const richEvent: Required<FeedEvent> = {
 				...event,
-				raw: responseBody
+				raw: responseBody,
+				timestamp: new Date().getTime()
 			}
 
 			// Ship event with ServiceBus
