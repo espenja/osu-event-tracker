@@ -1,0 +1,16 @@
+{
+	"name": "osu-event-receiver",
+	"version": "1.0.0",
+	"main": "index.js",
+	"private": true,
+	"license": "MIT",
+	"scripts": {
+		"start": "yarn ts-node ./src/index.ts"
+	},
+	"dependencies": {
+		"@azure/service-bus": "^7.3.0",
+		"dotenv": "^10.0.0",
+		"got": "^11.8.2",
+		"html-entities": "^2.3.2"
+	}
+}

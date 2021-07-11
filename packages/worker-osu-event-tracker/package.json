@@ -1,0 +1,23 @@
+{
+	"name": "worker-osu-event-tracker",
+	"version": "1.0.0",
+	"main": "index.js",
+	"private": true,
+	"license": "MIT",
+	"scripts": {
+		"clean": "yarn rimraf ./dist",
+		"build": "yarn clean && yarn ts-node ./build/build.ts",
+		"start": "yarn ts-node ./src/index.ts"
+	},
+	"dependencies": {
+		"@azure/cosmos": "^3.11.5",
+		"@azure/service-bus": "^7.2.0",
+		"got": "^11.8.2",
+		"html-entities": "^2.3.2"
+	},
+	"devDependencies": {
+		"@types/fs-extra": "^9.0.12",
+		"dotenv": "^10.0.0",
+		"fs-extra": "^10.0.0"
+	}
+}

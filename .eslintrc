@@ -1,0 +1,30 @@
+{
+	"parser": "@typescript-eslint/parser",
+	"env": {
+		"browser": true
+	},
+	"extends": [
+		"eslint:recommended",
+		"plugin:react/recommended",
+		"plugin:prettier/recommended",
+		"plugin:@typescript-eslint/eslint-recommended",
+		"plugin:@typescript-eslint/recommended"
+	],
+	"settings": {
+		"react": {
+			"version": "detect"
+		}
+	},
+	"plugins": ["prettier", "@typescript-eslint"],
+	"rules": {
+		"no-var": "error",
+		"no-extra-semi": "error",
+		"@typescript-eslint/no-explicit-any": "off",
+		"@typescript-eslint/explicit-module-boundary-types": "off",
+		"@typescript-eslint/explicit-function-return-type": "off",
+		"@typescript-eslint/member-delimiter-style": "off",
+		"@typescript-eslint/interface-name-prefix": "off",
+		"@typescript-eslint/no-non-null-assertion": "off",
+		"react/prop-types": "off"
+	}
+}

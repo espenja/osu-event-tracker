@@ -1,0 +1,10 @@
+{
+	"name": "utilities",
+	"version": "1.0.0",
+	"main": "index.js",
+	"private": true,
+	"license": "MIT",
+	"dependencies": {
+		"colors": "^1.4.0"
+	}
+}

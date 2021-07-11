@@ -1,0 +1,21 @@
+{
+	"name": "lib-osu-event-tracker",
+	"version": "1.0.0",
+	"main": "index.js",
+	"private": true,
+	"license": "MIT",
+	"scripts": {
+		"test": "yarn jest"
+	},
+	"dependencies": {
+		"got": "^11.8.2",
+		"html-entities": "^2.3.2"
+	},
+	"devDependencies": {
+		"@babel/core": "^7.14.6",
+		"@babel/preset-env": "^7.14.7",
+		"@babel/preset-typescript": "^7.14.5",
+		"@types/jest": "^26.0.24",
+		"jest": "^27.0.6"
+	}
+}

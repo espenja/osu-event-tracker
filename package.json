@@ -1,0 +1,25 @@
+{
+	"name": "osu-event-tracker",
+	"version": "1.0.0",
+	"main": "index.js",
+	"private": true,
+	"repository": "https://github.com/espenja/osu-event-tracker.git",
+	"author": "Espen Jacobsson <espen.jacobsson@gmail.com>",
+	"license": "MIT",
+	"workspaces": [
+		"packages/*"
+	],
+	"devDependencies": {
+		"@types/node": "^16.3.1",
+		"@typescript-eslint/eslint-plugin": "^4.28.2",
+		"@typescript-eslint/parser": "^4.28.2",
+		"dotenv": "^10.0.0",
+		"eslint": "^7.30.0",
+		"eslint-config-prettier": "^8.3.0",
+		"eslint-plugin-prettier": "^3.4.0",
+		"prettier": "^2.3.2",
+		"rimraf": "^3.0.2",
+		"ts-node": "^10.0.0",
+		"typescript": "^4.3.5"
+	}
+}
