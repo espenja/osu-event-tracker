@@ -1,6 +1,6 @@
 # osu-event-tracker
 
-Tracks events from the osu! event feed and turns the data into usable, typed JSON structures.
+Tracks events from the osu! event feed, turns the raw HTML data into usable, typed JSON structures, and publishes these events to various Azure Service Bus Topics that can be subscribed to.
 
 ![image](https://user-images.githubusercontent.com/1131968/125179319-efb44680-e1ed-11eb-824b-8cc7a234051a.png)
 
