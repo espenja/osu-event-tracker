@@ -2,6 +2,8 @@ import got from "got"
 import { decode } from "html-entities"
 import { version as libVersion, name as libName } from "../package.json"
 
+import { pickFromObject as pick, defaultFormatters, RequiredHandler } from "utilities/src/pickFromObject"
+
 import {
 	beatmapDeletedPattern,
 	beatmapPlayedXTimesPattern,
@@ -35,10 +37,26 @@ import {
 	FeedEventOsuSupporterReturning,
 	FeedEventRankedPlay,
 	FeedEventUnknown,
-	FeedEventUsernameChange
+	FeedEventUsernameChange,
+	Map,
+	User
 } from "./types/FeedEvents"
 
-const getFeedUrl = (offset: number) => `https://osu.ppy.sh/pages/include/eventfeed.php?i=${offset}`
+const getMap = (req: RequiredHandler): Map => {
+	return {
+		mapId: req("mapId", defaultFormatters.toInt),
+		mapLink: req("mapLink", decodeURI),
+		mapName: req("mapName", decode)
+	}
+}
+
+const getUser = (req: RequiredHandler): User => {
+	return {
+		userId: req("userId", defaultFormatters.toInt),
+		userLink: req("userLink", decodeURI),
+		username: req("username", decode)
+	}
+}
 
 const parseFeedEvent = (feedResult: string) => {
 	const split = feedResult.split("\n")
@@ -57,218 +75,174 @@ const parseFeedEvent = (feedResult: string) => {
 
 	const event = split[2]
 
-	const medalMatch = event.match(medalUnlockedPattern)
+	const medalMatch = medalUnlockedPattern.exec(event)
 	if (medalMatch) {
-		const medalAchieved: FeedEventMedalAchieved = {
+		const medalAchieved = pick<FeedEventMedalAchieved>(medalMatch.groups!, (req) => ({
 			feedIndex: currentEvent,
 			type: "medal-achieved",
-			medalName: decode(medalMatch[4]),
-			userId: parseInt(medalMatch[2]),
-			userLink: decodeURI(medalMatch[1]),
-			username: decode(medalMatch[3])
-		}
+			medalName: req("medalName", decode),
+			...getUser(req)
+		}))
 
 		return medalAchieved
 	}
 
-	const rankedPlayMatch = event.match(rankedPlayPattern)
+	const rankedPlayMatch = rankedPlayPattern.exec(event)
 	if (rankedPlayMatch) {
-		const rankedPlay: FeedEventRankedPlay = {
+		const rankedPlay = pick<FeedEventRankedPlay>(rankedPlayMatch.groups!, (req) => ({
 			feedIndex: currentEvent,
 			type: "ranked-play",
-			gameMode: parseInt(rankedPlayMatch[8]),
-			mapId: parseInt(rankedPlayMatch[7]),
-			mapLink: decodeURI(rankedPlayMatch[6]),
-			mapName: decode(rankedPlayMatch[9]),
-			globalRank: parseInt(rankedPlayMatch[5]),
-			rating: rankedPlayMatch[1],
-			userId: parseInt(rankedPlayMatch[3]),
-			userLink: decodeURI(rankedPlayMatch[2]),
-			username: decode(rankedPlayMatch[4])
-		}
+			gameMode: req("gameMode", defaultFormatters.toInt),
+			gameModeName: req("gameModeName"),
+			...getMap(req),
+			globalRank: req("globalRank", defaultFormatters.toInt),
+			rating: req("rating"),
+			...getUser(req)
+		}))
 
 		return rankedPlay
 	}
 
-	const updatedBeatmapMatch = event.match(beatmapUpdatedPattern)
+	const updatedBeatmapMatch = beatmapUpdatedPattern.exec(event)
 	if (updatedBeatmapMatch) {
-		const beatmapUpdate: FeedEventBeatmapUpdate = {
+		const beatmapUpdate = pick<FeedEventBeatmapUpdate>(updatedBeatmapMatch.groups!, (req) => ({
 			feedIndex: currentEvent,
 			type: "beatmap-update",
-			mapId: parseInt(updatedBeatmapMatch[5]),
-			mapLink: decodeURI(updatedBeatmapMatch[4]),
-			mapName: decode(updatedBeatmapMatch[6]),
-			userId: parseInt(updatedBeatmapMatch[2]),
-			userLink: decodeURI(updatedBeatmapMatch[1]),
-			username: decode(updatedBeatmapMatch[3])
-		}
+			...getMap(req),
+			...getUser(req)
+		}))
+
 		return beatmapUpdate
 	}
 
-	const newBeatmapMatch = event.match(beatmapNewPattern)
+	const newBeatmapMatch = beatmapNewPattern.exec(event)
 	if (newBeatmapMatch) {
-		const newBeatmap: FeedEventBeatmapNew = {
+		const newBeatmap = pick<FeedEventBeatmapNew>(newBeatmapMatch.groups!, (req) => ({
 			feedIndex: currentEvent,
 			type: "beatmap-new",
-			mapId: parseInt(newBeatmapMatch[5]),
-			mapLink: decodeURI(newBeatmapMatch[4]),
-			mapName: decode(newBeatmapMatch[6]),
-			userId: parseInt(newBeatmapMatch[2]),
-			userLink: decodeURI(newBeatmapMatch[1]),
-			username: decode(newBeatmapMatch[3])
-		}
+			...getMap(req),
+			...getUser(req)
+		}))
 
 		return newBeatmap
 	}
 
-	const osuSupporterNewMatch = event.match(osuSupporterNewPattern)
-
+	const osuSupporterNewMatch = osuSupporterNewPattern.exec(event)
 	if (osuSupporterNewMatch) {
-		const osuSupporterNew: FeedEventOsuSupporterNew = {
+		const osuSupporterNew = pick<FeedEventOsuSupporterNew>(osuSupporterNewMatch.groups!, (req) => ({
 			feedIndex: currentEvent,
 			type: "osu-supporter-new",
-			userId: parseInt(osuSupporterNewMatch[2]),
-			userLink: decodeURI(osuSupporterNewMatch[1]),
-			username: decode(osuSupporterNewMatch[3])
-		}
+			...getUser(req)
+		}))
 
 		return osuSupporterNew
 	}
 
-	const osuSupporterReturningMatch = event.match(osuSupporterReturningPattern)
-
+	const osuSupporterReturningMatch = osuSupporterReturningPattern.exec(event)
 	if (osuSupporterReturningMatch) {
-		const osuSupporterReturning: FeedEventOsuSupporterReturning = {
+		const osuSupporterReturning = pick<FeedEventOsuSupporterReturning>(osuSupporterReturningMatch.groups!, (req) => ({
 			feedIndex: currentEvent,
 			type: "osu-supporter-returning",
-			userId: parseInt(osuSupporterReturningMatch[2]),
-			userLink: decodeURI(osuSupporterReturningMatch[1]),
-			username: decode(osuSupporterReturningMatch[3])
-		}
+			...getUser(req)
+		}))
 
 		return osuSupporterReturning
 	}
 
-	const lostFirstPlaceMatch = event.match(firstPlaceLostPattern)
+	const lostFirstPlaceMatch = firstPlaceLostPattern.exec(event)
 	if (lostFirstPlaceMatch) {
-		const lostFirstPlace: FeedEventLostFirstPlace = {
+		const lostFirstPlace = pick<FeedEventLostFirstPlace>(lostFirstPlaceMatch.groups!, (req) => ({
 			feedIndex: currentEvent,
 			type: "lost-first-place",
-			gameMode: parseInt(lostFirstPlaceMatch[6]),
-			mapId: parseInt(lostFirstPlaceMatch[5]),
-			mapLink: decodeURI(lostFirstPlaceMatch[4]),
-			mapName: decode(lostFirstPlaceMatch[7]),
-			userId: parseInt(lostFirstPlaceMatch[2]),
-			userLink: decodeURI(lostFirstPlaceMatch[1]),
-			username: decode(lostFirstPlaceMatch[3])
-		}
+			gameMode: req("gameMode", defaultFormatters.toInt),
+			gameModeName: req("gameModeName"),
+			...getMap(req),
+			...getUser(req)
+		}))
 
 		return lostFirstPlace
 	}
 
-	const beatmapRevivedUpdateMatch = event.match(beatmapRevivedPattern)
-
+	const beatmapRevivedUpdateMatch = beatmapRevivedPattern.exec(event)
 	if (beatmapRevivedUpdateMatch) {
-		const beatmapRevivedUpdate: FeedEventBeatmapRevivedUpdate = {
+		const beatmapRevivedUpdate = pick<FeedEventBeatmapRevivedUpdate>(beatmapRevivedUpdateMatch.groups!, (req) => ({
 			feedIndex: currentEvent,
 			type: "beatmap-revived",
-			mapId: parseInt(beatmapRevivedUpdateMatch[2]),
-			mapLink: decodeURI(beatmapRevivedUpdateMatch[1]),
-			mapName: decode(beatmapRevivedUpdateMatch[3]),
-			userId: parseInt(beatmapRevivedUpdateMatch[5]),
-			userLink: decodeURI(beatmapRevivedUpdateMatch[4]),
-			username: decode(beatmapRevivedUpdateMatch[6])
-		}
+			...getMap(req),
+			...getUser(req)
+		}))
 
 		return beatmapRevivedUpdate
 	}
 
-	const usernameChangeMatch = event.match(usernameChangedPattern)
-
+	const usernameChangeMatch = usernameChangedPattern.exec(event)
 	if (usernameChangeMatch) {
-		const usernameChange: FeedEventUsernameChange = {
+		const usernameChange = pick<FeedEventUsernameChange>(usernameChangeMatch.groups!, (req) => ({
 			feedIndex: currentEvent,
 			type: "username-changed",
-			oldUsername: decode(usernameChangeMatch[3]),
-			userId: parseInt(usernameChangeMatch[2]),
-			userLink: decodeURI(usernameChangeMatch[1]),
-			username: decode(usernameChangeMatch[4])
-		}
+			oldUsername: req("oldUsername", decode),
+			...getUser(req)
+		}))
 
 		return usernameChange
 	}
 
-	const osuSupporterGiftedMatch = event.match(osuSupporterGiftedPattern)
-
+	const osuSupporterGiftedMatch = osuSupporterGiftedPattern.exec(event)
 	if (osuSupporterGiftedMatch) {
-		const osuSupporterGifted: FeedEventOsuSupporterGifted = {
+		const osuSupporterGifted = pick<FeedEventOsuSupporterGifted>(osuSupporterGiftedMatch!, (req) => ({
 			feedIndex: currentEvent,
 			type: "osu-supporter-gifted",
-			userId: parseInt(osuSupporterGiftedMatch[2]),
-			userLink: decodeURI(osuSupporterGiftedMatch[1]),
-			username: decode(osuSupporterGiftedMatch[3])
-		}
+			...getUser(req)
+		}))
 
 		return osuSupporterGifted
 	}
 
-	const beatmapSetQualifiedMatch = event.match(beatmapSetQualifiedPattern)
+	const beatmapSetQualifiedMatch = beatmapSetQualifiedPattern.exec(event)
 	if (beatmapSetQualifiedMatch) {
-		const beatmapSetQualified: FeedEventBeatmapSetQualified = {
+		const beatmapSetQualified = pick<FeedEventBeatmapSetQualified>(beatmapSetQualifiedMatch!, (req) => ({
 			feedIndex: currentEvent,
 			type: "beatmapset-qualified",
-			mapId: parseInt(beatmapSetQualifiedMatch[2]),
-			mapLink: decodeURI(beatmapSetQualifiedMatch[1]),
-			mapName: decode(beatmapSetQualifiedMatch[3]),
-			userId: parseInt(beatmapSetQualifiedMatch[5]),
-			userLink: decodeURI(beatmapSetQualifiedMatch[4]),
-			username: decode(beatmapSetQualifiedMatch[6])
-		}
+			...getMap(req),
+			...getUser(req)
+		}))
 
 		return beatmapSetQualified
 	}
 
-	const beatmapDeletedMatch = event.match(beatmapDeletedPattern)
+	const beatmapDeletedMatch = beatmapDeletedPattern.exec(event)
 	if (beatmapDeletedMatch) {
-		const beatmapDeleted: FeedEventBeatmapDeleted = {
+		const beatmapDeleted = pick<FeedEventBeatmapDeleted>(beatmapDeletedMatch!, (req) => ({
 			feedIndex: currentEvent,
 			type: "beatmap-deleted",
-			mapId: parseInt(beatmapDeletedMatch[2]),
-			mapLink: decodeURI(beatmapDeletedMatch[1]),
-			mapName: decode(beatmapDeletedMatch[3])
-		}
+			...getMap(req)
+		}))
 
 		return beatmapDeleted
 	}
 
-	const beatmapRankedMatch = event.match(beatmapRankedPattern)
+	const beatmapRankedMatch = beatmapRankedPattern.exec(event)
 	if (beatmapRankedMatch) {
-		const beatmapRanked: FeedEventBeatmapRanked = {
+		const beatmapRanked = pick<FeedEventBeatmapRanked>(beatmapRankedMatch!, (req) => ({
 			feedIndex: currentEvent,
 			type: "beatmap-ranked",
-			mapId: parseInt(beatmapRankedMatch[2]),
-			mapLink: decodeURI(beatmapRankedMatch[1]),
-			mapName: decode(beatmapRankedMatch[3]),
-			userId: parseInt(beatmapRankedMatch[5]),
-			userLink: decodeURI(beatmapRankedMatch[4]),
-			username: decode(beatmapRankedMatch[6])
-		}
+			...getMap(req),
+			...getUser(req)
+		}))
 
 		return beatmapRanked
 	}
 
-	const beatmapPlayedTimesMatch = event.match(beatmapPlayedXTimesPattern)
+	const beatmapPlayedTimesMatch = beatmapPlayedXTimesPattern.exec(event)
 	if (beatmapPlayedTimesMatch) {
 		const number = beatmapPlayedTimesMatch[4].replace(/[,\.]/g, "").trim()
 
-		const beatmapPlayedTimes: FeedEventBeatmapPlayedTimes = {
+		const beatmapPlayedTimes = pick<FeedEventBeatmapPlayedTimes>(beatmapPlayedTimesMatch.groups!, (req) => ({
 			feedIndex: currentEvent,
 			type: "beatmap-played-x-times",
-			mapId: parseInt(beatmapPlayedTimesMatch[2]),
-			mapLink: decodeURI(beatmapPlayedTimesMatch[1]),
-			mapName: decode(beatmapPlayedTimesMatch[3]),
+			...getMap(req),
 			number: parseInt(number)
-		}
+		}))
 
 		return beatmapPlayedTimes
 	}
@@ -284,6 +258,8 @@ const parseFeedEvent = (feedResult: string) => {
 type GetNextFeedEventOptions = {
 	logger?: (str?: string, obj?: Record<string, any>) => void
 }
+
+const getFeedUrl = (offset: number) => `https://osu.ppy.sh/pages/include/eventfeed.php?i=${offset}`
 
 export const getNextFeedEvent = async (offset: number, options?: GetNextFeedEventOptions) => {
 	const feedEventUrl = getFeedUrl(offset)
