@@ -19,6 +19,7 @@ export type FeedType =
 export type FeedEvent = {
 	type: FeedType
 	feedIndex: number
+	raw?: string
 }
 
 export type Map = {
@@ -54,6 +55,7 @@ export type FeedEventOsuSupporterGifted = FeedUserEvent
 export type FeedEventLostFirstPlace = FeedUserEvent &
 	Map & {
 		gameMode: number
+		gameModeName: string
 	}
 
 export type FeedEventUsernameChange = FeedUserEvent & {
@@ -67,6 +69,7 @@ export type FeedEventMedalAchieved = FeedUserEvent & {
 export type FeedEventRankedPlay = FeedUserEvent &
 	Map & {
 		gameMode: number
+		gameModeName: string
 		globalRank: number
 		rating: string
 	}
