@@ -8,7 +8,7 @@ import { FeedEvent } from "../../lib-osu-event-tracker/src/types/FeedEvents"
 
 require("dotenv").config()
 
-const { log, error } = createLogger("osu-event-receiver", {
+const { log, error } = createLogger("worker-osu-event-tracker", {
 	doLog: true,
 	useColors: true,
 	useTimestamps: true
@@ -25,7 +25,24 @@ const start = async () => {
 	const container = await getContainer(config)
 
 	const sbSender = new SBClientSender({
-		connectionString: config.serviceBus.connectionString
+		connectionString: config.serviceBus.connectionString,
+		topics: [
+			"beatmap-deleted",
+			"beatmap-new",
+			"beatmap-played-x-times",
+			"beatmap-ranked",
+			"beatmap-revived",
+			"beatmap-update",
+			"beatmapset-qualified",
+			"lost-first-place",
+			"medal-achieved",
+			"osu-supporter-gifted",
+			"osu-supporter-new",
+			"osu-supporter-returning",
+			"ranked-play",
+			"unknown",
+			"username-changed"
+		]
 	})
 
 	let currentIndex = 0
@@ -45,7 +62,8 @@ const start = async () => {
 
 			// No new events were returned, wait a little bit before querying again
 			if (event?.type === "none") {
-				await sleep(500)
+				await sleep(200)
+				continue
 			}
 
 			const richEvent: Required<FeedEvent> = {
@@ -54,10 +72,10 @@ const start = async () => {
 			}
 
 			// Ship event with ServiceBus
-			sbSender.send(richEvent, richEvent.type)
+			await sbSender.send(richEvent, richEvent.type)
 
 			// Put it in Cosmos
-			container.items.create({
+			await container.items.create({
 				...richEvent,
 				pk: event.type
 			})
