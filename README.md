@@ -2,7 +2,7 @@
 
 Tracks events from the osu! event feed and turns the data into usable, typed JSON structures.
 
-![image](https://user-images.githubusercontent.com/1131968/125179290-bb408a80-e1ed-11eb-8b40-bb70b7d03e29.png)
+![image](https://user-images.githubusercontent.com/1131968/125179319-efb44680-e1ed-11eb-824b-8cc7a234051a.png)
 
 ## Types
 
