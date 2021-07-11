@@ -2,6 +2,8 @@
 
 Tracks events from the osu! event feed and turns the data into usable, typed JSON structures.
 
+![image](https://user-images.githubusercontent.com/1131968/125179319-efb44680-e1ed-11eb-824b-8cc7a234051a.png)
+
 ## Types
 
 Types for all events are available in `packages/lib-osu-event-tracker/src/types/FeedEvents.ts`
