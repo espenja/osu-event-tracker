@@ -16,7 +16,6 @@ import {
 } from "../src/types/EventMatchers"
 
 import {
-	FeedEvent,
 	FeedEventBeatmapDeleted,
 	FeedEventBeatmapNew,
 	FeedEventBeatmapPlayedTimes,
